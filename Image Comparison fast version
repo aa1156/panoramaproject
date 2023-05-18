@@ -1,0 +1,38 @@
+from PIL import Image
+import math
+
+def calculate_image_similarity(image1_path, image2_path):
+    # Open the images
+    image1 = Image.open(image1_path)
+    image2 = Image.open(image2_path)
+
+    # Convert images to grayscale
+    image1 = image1.convert("L")
+    image2 = image2.convert("L")
+
+    # Resize images to the same dimensions
+    image1 = image1.resize((200, 200))
+    image2 = image2.resize((200, 200))
+
+    # Calculate the Mean Squared Error (MSE)
+    mse = 0
+    for p1, p2 in zip(image1.getdata(), image2.getdata()):
+        mse += (p1 - p2) ** 2
+    mse /= (200 * 200)
+
+    if mse != 0:
+        # Calculate the Peak Signal-to-Noise Ratio (PSNR)
+        max_pixel_value = 255  # Maximum pixel value
+        psnr = 10 * math.log10((max_pixel_value ** 2) / mse)
+
+        # PSNR to the range of 0 to 1
+        similarity_score = (psnr - 0) / (40 - 0)
+
+        return similarity_score
+    else:
+        return 1
+
+image1_path = 'pic1.jpg'
+image2_path = 'pic2.jpg'
+similarity_score = calculate_image_similarity(image1_path, image2_path)
+print(f"Similarity score: {similarity_score}")
