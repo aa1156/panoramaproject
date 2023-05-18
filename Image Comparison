@@ -1,0 +1,59 @@
+import cv2
+import numpy as np
+
+def compare_images(img1, img2, region_size):
+    # Convert images to grayscale
+    gray_img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+    gray_img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+
+    # Get image dimensions and region size
+    height, width = gray_img1.shape
+    region_height, region_width = region_size
+
+    # Extract all regions from the first image
+    regions1 = np.lib.stride_tricks.sliding_window_view(gray_img1, (region_height, region_width))
+
+    matching_regions = []
+
+    # Iterate over the regions of the second image
+    for y2 in range(height - region_height + 1):
+        for x2 in range(width - region_width + 1):
+            # Extract the comparison region from the second image
+            region2 = gray_img2[y2:y2 + region_height, x2:x2 + region_width]
+
+            # Compare the regions for equality
+            equal_regions = (regions1 == region2).all(axis=(2, 3))
+
+            # Check if any regions are equal
+            if np.any(equal_regions):
+                # Get the indices of the equal regions
+                equal_indices = np.argwhere(equal_regions)
+
+                # Add the matching regions to the result
+                for index in equal_indices:
+                    y1, x1 = index
+                    matching_regions.append((x1, y1, x2, y2))
+
+    return matching_regions
+
+
+# Load the images
+img1 = cv2.imread("pic1.jpg")
+img2 = cv2.imread("pic2.jpg")
+
+# Define the size of the comparison region (e.g., 3x3)
+region_size = (3, 3)
+
+# Compare the images and get the matching regions
+matching_regions = compare_images(img1, img2, region_size)
+
+# Display the matching regions
+for region in matching_regions:
+    x1, y1, x2, y2 = region
+    cv2.rectangle(img1, (x1, y1), (x1 + region_size[1], y1 + region_size[0]), (0, 255, 0), 2)
+    cv2.rectangle(img2, (x2, y2), (x2 + region_size[1], y2 + region_size[0]), (0, 255, 0), 2)
+
+cv2.imshow("Image 1", img1)
+cv2.imshow("Image 2", img2)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
